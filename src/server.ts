@@ -1,19 +1,8 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import {
-  addDummyDbItems,
-  addDbItem,
-  getAllDbItems,
-  getDbItemById,
-  DbItem,
-  updateDbItemById,
-} from "./db";
+import { addDummyDbItems } from "./db";
 import filePath from "./filePath";
-
-// loading in some dummy items into the database
-// (comment out if desired, or change the number)
-addDummyDbItems(20);
 
 const app = express();
 
@@ -27,57 +16,61 @@ dotenv.config();
 
 // use the environment variable PORT, or 4000 as a fallback
 const PORT_NUMBER = process.env.PORT ?? 4000;
+const allTasks = {
+  toDoTasks: [
+    { taskBody: "First", AddedBy: "Viki", DueDate: "06/08/2023" },
+    { taskBody: "Second", AddedBy: "Viki", DueDate: "06/08/2023" },
+    { taskBody: "Third", AddedBy: "Viki", DueDate: "06/08/2023" },
+  ],
+  completeTasks: [
+    { taskBody: "Forth", AddedBy: "Viki", DueDate: "06/08/2023" },
+  ],
+};
+// const allCompletedTasks: JsonTask[] = [];
+interface JsonTask {
+  taskBody: string;
+  AddedBy: string;
+  DueDate: string;
+}
 
 // API info page
-app.get("/", (req, res) => {
-  const pathToFile = filePath("../public/index.html");
-  res.sendFile(pathToFile);
-});
+function handleGetRequestForRootDoc(req: any, res: any) {
+  res.json(allTasks);
+}
+function handlePOSTRequestOfNewTask(req: any, res: any) {
+  const receivedTask: JsonTask = req.body;
+  allTasks.toDoTasks.push(receivedTask);
+}
+function handlePatchRequestForCompletion(req: any, res: any) {
+  const receivedCompleteTask: JsonTask = req.body;
+  const index = allTasks.toDoTasks.findIndex(
+    (t) => t.taskBody === receivedCompleteTask.taskBody
+  );
+  allTasks.toDoTasks.splice(index, 1);
+  allTasks.completeTasks.push(receivedCompleteTask);
+}
 
-// GET /items
-app.get("/items", (req, res) => {
-  const allSignatures = getAllDbItems();
-  res.status(200).json(allSignatures);
-});
-
-// POST /items
-app.post<{}, {}, DbItem>("/items", (req, res) => {
-  // to be rigorous, ought to handle non-conforming request bodies
-  // ... but omitting this as a simplification
-  const postData = req.body;
-  const createdSignature = addDbItem(postData);
-  res.status(201).json(createdSignature);
-});
-
-// GET /items/:id
-app.get<{ id: string }>("/items/:id", (req, res) => {
-  const matchingSignature = getDbItemById(parseInt(req.params.id));
-  if (matchingSignature === "not found") {
-    res.status(404).json(matchingSignature);
+function handleDeleteRequest(req: any, res: any) {
+  const receivedDeleteTask: JsonTask = req.body;
+  const indexToDo: number = allTasks.toDoTasks.findIndex(
+    (t) => t.taskBody === receivedDeleteTask.taskBody
+  );
+  const indexComplete: number = allTasks.completeTasks.findIndex(
+    (t) => t.taskBody === receivedDeleteTask.taskBody
+  );
+  if (indexToDo === -1) {
+    allTasks.completeTasks.splice(indexComplete, 1);
   } else {
-    res.status(200).json(matchingSignature);
+    allTasks.toDoTasks.splice(indexToDo, 1);
   }
-});
+}
+app.get("/", handleGetRequestForRootDoc);
 
-// DELETE /items/:id
-app.delete<{ id: string }>("/items/:id", (req, res) => {
-  const matchingSignature = getDbItemById(parseInt(req.params.id));
-  if (matchingSignature === "not found") {
-    res.status(404).json(matchingSignature);
-  } else {
-    res.status(200).json(matchingSignature);
-  }
-});
+app.post("/", handlePOSTRequestOfNewTask);
 
-// PATCH /items/:id
-app.patch<{ id: string }, {}, Partial<DbItem>>("/items/:id", (req, res) => {
-  const matchingSignature = updateDbItemById(parseInt(req.params.id), req.body);
-  if (matchingSignature === "not found") {
-    res.status(404).json(matchingSignature);
-  } else {
-    res.status(200).json(matchingSignature);
-  }
-});
+app.patch("/", handlePatchRequestForCompletion);
+
+app.delete("/", handleDeleteRequest);
 
 app.listen(PORT_NUMBER, () => {
   console.log(`Server is listening on port ${PORT_NUMBER}!`);
