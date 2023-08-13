@@ -9,14 +9,19 @@ app.use(cors());
 
 // read in contents of any environment variables in the .env file
 dotenv.config();
-
 const client = new Client({ connectionString: process.env.DATABASE_URL });
 
-client
-  .connect()
-  .then(() => console.log("Connected"))
-  .then(() => client.query("select * from todo"))
-  .catch((e: any) => console.log(e));
+async function connectToDb() {
+  await client.connect();
+  console.log("Connected async");
+}
+connectToDb();
+// Below other option: connecting with .then()
+// client
+//   .connect()
+//   .then(() => console.log("Connected"))
+//   .then(() => client.query("select * from todo"))
+//   .catch((e: any) => console.log(e));
 
 //routing
 app.get("/", (req, res) => {
@@ -26,7 +31,18 @@ app.get("/", (req, res) => {
 });
 
 app.post("/", (req, res) => {
-  client.query(`INSERT ${req.body} INTO todo`).then(() => res.sendStatus(201));
+  const { description, added_by, date, completed } = req.body;
+  const queryAddTask = {
+    text: "INSERT INTO todo (description, added_by, date, completed) VALUES ($1, $2, $3, $4)",
+    values: [description, added_by, date, completed],
+  };
+  client
+    .query(queryAddTask)
+    .then(() => res.sendStatus(201))
+    .catch((error) => {
+      console.error("Error during addind data into database", error);
+      res.sendStatus(500);
+    });
 });
 
 // use the environment variable PORT, or 4000 as a fallback
@@ -36,42 +52,9 @@ app.listen(PORT_NUMBER, () => {
 });
 
 // const allCompletedTasks: JsonTask[] = [];
-interface JsonTask {
-  taskBody: string;
-  AddedBy: string;
-  DueDate: string;
+interface JsonTaskAddProps {
+  description: string;
+  added_by: string;
+  date: string;
+  completed: "Y" | "N";
 }
-
-// app.get("/", (req, res) => {
-//   res.json(allTasks);
-// });
-
-// app.post("/", (req, res) => {
-//   const receivedTask: JsonTask = req.body;
-//   allTasks.toDoTasks.push(receivedTask);
-//   res.status(201).json(receivedTask);
-// });
-
-// app.patch("/", (req, res) => {
-//   const receivedCompleteTask: JsonTask = req.body;
-//   const index = allTasks.toDoTasks.findIndex(
-//     (t) => t.taskBody === receivedCompleteTask.taskBody
-//   );
-//   allTasks.toDoTasks.splice(index, 1);
-//   allTasks.completeTasks.push(receivedCompleteTask);
-// });
-
-// app.delete("/", (req, res) => {
-//   const receivedDeleteTask: JsonTask = req.body;
-//   const indexToDo: number = allTasks.toDoTasks.findIndex(
-//     (t) => t.taskBody === receivedDeleteTask.taskBody
-//   );
-//   const indexComplete: number = allTasks.completeTasks.findIndex(
-//     (t) => t.taskBody === receivedDeleteTask.taskBody
-//   );
-//   if (indexToDo === -1) {
-//     allTasks.completeTasks.splice(indexComplete, 1);
-//   } else {
-//     allTasks.toDoTasks.splice(indexToDo, 1);
-//   }
-// });
