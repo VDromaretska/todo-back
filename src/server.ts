@@ -45,6 +45,14 @@ app.post("/", (req, res) => {
     });
 });
 
+app.patch("/", (req, res) => {
+  const { description, added_by, date, completed } = req.body.data;
+  const queryCompleteTask = {
+    text: "UPDATE todo SET completed = $1 WHERE description = $2",
+    values: ["Y", description],
+  };
+});
+
 // use the environment variable PORT, or 4000 as a fallback
 const PORT_NUMBER = process.env.PORT ?? 4000;
 app.listen(PORT_NUMBER, () => {
