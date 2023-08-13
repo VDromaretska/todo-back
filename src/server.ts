@@ -21,8 +21,12 @@ client
 //routing
 app.get("/", (req, res) => {
   client
-    .query("select * from todo")
+    .query("SELECT * FROM todo")
     .then((dbresult) => res.json(dbresult.rows));
+});
+
+app.post("/", (req, res) => {
+  client.query(`INSERT ${req.body} INTO todo`).then(() => res.sendStatus(201));
 });
 
 // use the environment variable PORT, or 4000 as a fallback
