@@ -46,11 +46,18 @@ app.post("/", (req, res) => {
 });
 
 app.patch("/", (req, res) => {
-  const { description, added_by, date, completed } = req.body.data;
+  const { description } = req.body.data;
   const queryCompleteTask = {
     text: "UPDATE todo SET completed = $1 WHERE description = $2",
     values: ["Y", description],
   };
+  client
+    .query(queryCompleteTask)
+    .then(() => res.sendStatus(201))
+    .catch((error) => {
+      console.error("Error during marking task as complete", error);
+      res.sendStatus(500);
+    });
 });
 
 // use the environment variable PORT, or 4000 as a fallback
