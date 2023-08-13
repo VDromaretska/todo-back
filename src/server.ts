@@ -46,7 +46,7 @@ app.post("/", (req, res) => {
 });
 
 app.patch("/", (req, res) => {
-  const { description } = req.body.data;
+  const { description } = req.body;
   const queryCompleteTask = {
     text: "UPDATE todo SET completed = $1 WHERE description = $2",
     values: ["Y", description],
