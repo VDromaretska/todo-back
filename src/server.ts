@@ -63,7 +63,7 @@ app.patch("/", (req, res) => {
 app.delete("/", (req, res) => {
   const { t_id } = req.body;
   const queryDeleteTask = {
-    text: "DELETE FROM todo WHERE t_id IS $1",
+    text: "DELETE FROM todo WHERE t_id = $1",
     values: [t_id],
   };
   client
