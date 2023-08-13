@@ -46,10 +46,10 @@ app.post("/", (req, res) => {
 });
 
 app.patch("/", (req, res) => {
-  const { description } = req.body;
+  const { t_id } = req.body;
   const queryCompleteTask = {
-    text: "UPDATE todo SET completed = $1 WHERE description = $2",
-    values: ["Y", description],
+    text: "UPDATE todo SET completed = $1 WHERE t_id = $2",
+    values: ["Y", t_id],
   };
   client
     .query(queryCompleteTask)
@@ -61,10 +61,10 @@ app.patch("/", (req, res) => {
 });
 
 app.delete("/", (req, res) => {
-  const { description } = req.body;
+  const { t_id } = req.body;
   const queryDeleteTask = {
-    text: "DELETE FROM todo WHERE description IS $1",
-    values: [description],
+    text: "DELETE FROM todo WHERE t_id IS $1",
+    values: [t_id],
   };
   client
     .query(queryDeleteTask)
