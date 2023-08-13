@@ -60,6 +60,21 @@ app.patch("/", (req, res) => {
     });
 });
 
+app.delete("/", (req, res) => {
+  const { description } = req.body;
+  const queryDeleteTask = {
+    text: "DELETE FROM todo WHERE description IS $1",
+    values: [description],
+  };
+  client
+    .query(queryDeleteTask)
+    .then(() => res.sendStatus(201))
+    .catch((error) => {
+      console.error("Error during deleting task", error);
+      res.sendStatus(500);
+    });
+});
+
 // use the environment variable PORT, or 4000 as a fallback
 const PORT_NUMBER = process.env.PORT ?? 4000;
 app.listen(PORT_NUMBER, () => {
